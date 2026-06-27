@@ -10,9 +10,10 @@ create table users(
   email varchar(100) not null unique,
   password_hash varchar(100) not null,
   phone varchar(15) not null unique,
-  role enum('customer','store_manager','delivery_boy','admin') not null,
+  role enum('store_manager','delivery_boy','admin') not null,
   created_at timestamp default current_timestamp
 );
+
 
 create table stores(
   id bigint primary key  auto_increment,
@@ -25,6 +26,14 @@ create table stores(
   closing_time time not null
 );
 
+
+create table customers(
+  id bigint primary key auto_increment,
+  mobile_number varchar(15) not null unique,
+  created_at timestamp default current_timestamp
+);
+
+
 create table store_manager(
   user_id bigint primary key,
   store_id bigint not null,
@@ -32,9 +41,9 @@ create table store_manager(
   foreign key(store_id) references stores(id) on delete cascade
 );
 
+
 create table delivery_boy(
   user_id bigint primary key,
-  store_id bigint not null,
   vehicle_no varchar(20) not null unique,
   latitude decimal(11,10) not null,
   longitude decimal(11,10) not null,
@@ -42,8 +51,8 @@ create table delivery_boy(
   active_orders int not null default 0,
   total_deliveries bigint not null default 0,
   foreign key (user_id) references users(id) on delete cascade,
-  foreign key (store_id) refernces stores(id) on delete cascade
 );
+
 
 create table categories(
   id bigint primary key auto_increment,
@@ -53,6 +62,7 @@ create table categories(
   is_active boolean not null default true,
   created_at timestamp default current_timestamp
 );
+
 
 create table subcategories(
   id bigint primary key auto_increment ,
@@ -65,6 +75,7 @@ create table subcategories(
   foreign key(category_id) references categories(id) on delete cascade,
   unique(category_id,name)
 );
+
 
 create table products(
   id bigint primary key auto_increment,
@@ -79,6 +90,7 @@ create table products(
   foreign key (subcategory_id) references subcategories(id) on delete cascade
 );
 
+
 create table product_images(
   id bigint primary key auto_increment,
   product_id bigint not null,
@@ -86,6 +98,7 @@ create table product_images(
   display_order int not null default 1,
   foreign key(product_id) references products(id) on delete cascade
 );
+
 
 create table product_variants (
   id bigint primary key auto_increment,
@@ -100,11 +113,13 @@ create table product_variants (
   foreign key(product_id) references products(id) on delete cascade
 );
 
+
 create table cart(
   id bigint primary key auto_increment,
-  user_id bigint not null unique,
-  foreign key(user_id) references users(id) on delete cascade
+  customer_id bigint not null unique,
+  foreign key(customer_id) references customers(id) on delete cascade
 );
+
 
 create table cartitems(
   cart_id bigint not null,
@@ -115,10 +130,12 @@ create table cartitems(
   primary key(cart_id,product_variant_id)
 );
 
+
 create table attributes(
   id bigint primary key auto_increment,
   name varchar(100) not null
 );
+
 
 create table attribute_values(
   id bigint primary key auto_increment,
@@ -128,6 +145,7 @@ create table attribute_values(
   unique(attribute_id,value)
 );
 
+
 create table subcategory_attributes(
   attribute_id bigint not null,
   subcategory_id bigint not null,
@@ -135,6 +153,7 @@ create table subcategory_attributes(
   foreign key (subcategory_id) references subcategories(id) on delete cascade,
   primary key(attribute_id,subcategory_id)
 );
+
 
 create table inventory(
   store_id bigint not null,
@@ -146,9 +165,10 @@ create table inventory(
   primary key(store_id,product_variant_id)
 );
 
+
 create table orders(
   id bigint primary key auto_increment,
-  user_id bigint not null,
+  customer_id bigint not null,
   store_id bigint  null,
   delivery_boy_id bigint  null,
   sub_total decimal(10,2) not null,
@@ -162,10 +182,11 @@ create table orders(
   qr_token varchar(100) not null,
   qr_verified boolean default false,
   created_at timestamp default current_timestamp,
-  foreign key (user_id) references users(id) on delete cascade,
+  foreign key (customer_id) references customers(id) on delete cascade,
   foreign key (store_id) references stores(id) on delete cascade,
   foreign key (delivery_boy_id) references delivery_boy(user_id) on delete set null
 );
+
 
 create table order_items(
   order_id bigint not null,
@@ -177,27 +198,30 @@ create table order_items(
   primary key(order_id,product_variant_id)
 );
 
+
 create table notifications(
   id bigint primary key auto_increment,
-  user_id bigint not null,
+  customer_id bigint not null,
   product_variant_id bigint not null,
   store_id bigint not null,
   created_at timestamp default current_timestamp,
-  foreign key (user_id) references users(id) on delete cascade,
+  foreign key (customer_id) references customers(id) on delete cascade,
   foreign key (product_variant_id) references product_variants(id) on delete cascade,
   foreign key (store_id) references stores(id) on delete cascade,
   unique(user_id,product_variant_id,store_id)
 );
 
+
 create table reviews(
-  user_id bigint not null,
+  customer_id bigint not null,
   product_variant_id bigint not null,
   rating int not null check (rating beween 1 and 5),
   review text,
   created_at timestamp default current_timestamp,
-  foreign key (user_id) references users(id) on delete cascade,
+  foreign key (customer_id) references customers(id) on delete cascade,
   foreign key (product_variant_id) references product_variants(id) on delete cascade
 );
+
 
 create table payments(
   id bigint primary key auto_increment,
@@ -211,6 +235,7 @@ create table payments(
   transaction_id varchar(100) unique,
   foreign key (order_id) references orders(id) on delete cascade
 );
+
 
 create table issues(
   id bigint primary key auto_increment,
