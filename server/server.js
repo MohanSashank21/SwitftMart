@@ -2,11 +2,10 @@ require('dotenv').config();
 
 const mySqlPool = require("./src/config/db");
 const app = require("./src/app");
-const { connectRedis } = require("./src/config/redis");
+const { connectRedis, redisClient } = require("./src/config/redis");
 const port = process.env.PORT;
 
-
-const startServer = async () =>{
+const startServer = async () => {
   try {
     await connectRedis();
     console.log("redis connected");
@@ -14,7 +13,7 @@ const startServer = async () =>{
     await mySqlPool.query('select 1');
     console.log("mysql is connected");
 
-    app.listen(port ,()=>{
+    app.listen(port, () => {
       console.log(`server is running at the port ${port}`);
     });
   } catch (error) {
@@ -22,6 +21,7 @@ const startServer = async () =>{
     process.exit(1);
   }
 };
-
 startServer();
+
+
 
